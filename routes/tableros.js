@@ -19,6 +19,8 @@ router.get('/', (req, res) => {
     });
 });
 
+
+
 router.get('/tablerosEspacioTrabajo/:idEspacioTrabajo', (req, res) => {
     Tablero.find({espacioTrabajo: req.params.idEspacioTrabajo}).then(resultado => {
         res.status(200)
@@ -89,7 +91,7 @@ router.put('/:id', (req, res) => {
     Tablero.findByIdAndUpdate(req.params.id, {
         $set: {
             titulo: req.body.titulo,
-            descripcion: req.body.descripcion,
+            colorTablero: req.body.colorTablero,
         }
     }, { new: true }).then(resultado => {
         if (resultado) {
@@ -113,7 +115,7 @@ router.delete('/:id', (req, res) => {
         .then(resultado => {
             if (resultado) {
                 res.status(200)
-                    .send({ resultado: resultado });
+                    .send(resultado);
             }
             else {
                 res.status(400)

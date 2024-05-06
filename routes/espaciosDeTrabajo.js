@@ -2,8 +2,20 @@ const express = require('express');
 //const auth = require(__dirname + '/../auth/auth');
 
 let EspacioDeTrabajo = require(__dirname + '/../models/espacioDeTrabajo.js');
+let Tablero = require(__dirname + '/../models/tablero.js');
 
 let router = express.Router();
+
+// obtener todos los espacios de trabajo
+/* router.get('/prueba/:idUsuario', (req, res) => {
+    EspacioDeTrabajo.find({creadoPor: req.params.idUsuario,}).then(resultado => {
+        res.status(200)
+            .send({ resultado: resultado });
+    }).catch(error => {
+        res.status(500)
+            .send({ error: "No hay espacios de trabajo registrados" });
+    });
+}); */
 
 // Obtener todos los tablero
 router.get('/', (req, res) => {
@@ -15,6 +27,20 @@ router.get('/', (req, res) => {
             .send({ error: "No hay tableros registrados" });
     });
 });
+
+// Tableros de los espacios de trabajos del creador
+router.get('/creador/:idUsuario/tableros', (req, res) => {
+    EspacioDeTrabajo.find({creadoPor: req.params.idUsuario}).then(resultado => {
+        Tablero.find({creadoPor: resultado._id}).then((result) => {
+            res.status(200)
+            .send(result);
+        })  
+    }).catch(error => {
+        res.status(500)
+            .send({ error: "No hay espacios de trabajo registrados" });
+    });
+});
+
 
 router.get('/creador/:idUsuario', (req, res) => {
     EspacioDeTrabajo.find({creadoPor: req.params.idUsuario}).then(resultado => {
@@ -44,11 +70,11 @@ router.get('/:id', (req, res) => {
             .send(resultado);
     }).catch(error => {
         res.status(400)
-            .send({ error: "No existe el tablero" });
+            .send({ error: "No existe el espacio de trabajo" });
     });
 });
 
-// Añadir un tablero
+// Añadir un espacio de trabajo
 router.post('/',  (req, res) => {
     let nuevoEspacioDeTrabajo = new EspacioDeTrabajo({
         titulo: req.body.titulo,
@@ -111,7 +137,8 @@ router.put('/:id', (req, res) => {
 
 // Eliminar un EspacioDeTrabajo
 router.delete('/:id', (req, res) => {
-    EspacioDeTrabajo.findByIdAndDelete(req.params.id)
+    Tablero.deleteMany({espacioTrabajo: req.params.id}).then(() => {
+        EspacioDeTrabajo.findByIdAndDelete(req.params.id)
         .then(resultado => {
             res.status(200)
                 .send({ resultado: resultado });
@@ -120,6 +147,11 @@ router.delete('/:id', (req, res) => {
             res.status(400)
                 .send({ error: error });
         });
+    })
+
 });
+
+
+
 
 module.exports = router;

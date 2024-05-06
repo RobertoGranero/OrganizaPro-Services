@@ -110,6 +110,28 @@ router.delete('/:id/tarjetaDelete/:indice', (req, res) => {
         });
 });
 
+// Editar titulo lista
+router.put('/:id/tituloLista', (req, res) => {
+    Lista.findByIdAndUpdate(req.params.id, {
+        $set: {
+            titulo: req.body.titulo,
+        }
+    }, { new: true }).then(resultado => {
+        if (resultado) {
+            res.status(200)
+                .send({ resultado: resultado });
+        }
+        else {
+            res.status(400)
+                .send({ error: "Error actualizando los datos de la lista" });
+        }
+
+    }).catch(error => {
+        res.status(400)
+            .send({ error: "Error actualizando los datos del tablero" });
+    });
+});
+
 // Eliminar una lista
 router.delete('/:id', (req, res) => {
     Lista.findByIdAndDelete(req.params.id)
@@ -128,5 +150,8 @@ router.delete('/:id', (req, res) => {
                 .send({ error: "Error eliminando la lista" });
         });
 });
+
+
+
 
 module.exports = router;

@@ -13,6 +13,12 @@ let checkList = new mongoose.Schema({
         required: false,
 
     },
+    estaHecho: {
+        type: Boolean,
+        required: false,
+        default: false
+    },
+
     fechaInicio: {
         type: Date,
         required: false,
@@ -32,8 +38,11 @@ let comentarioSchema = new mongoose.Schema({
         required: true,
     },
     usuario: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'usuarios'
+        nombre: String,
+        apellidos: String,
+        email: String,
+        avatar: String
+
     },
     fechaCreacion: {
         type: Date,
@@ -53,13 +62,19 @@ let tarjetaSchema = new mongoose.Schema({
         required: false,
         default: ""
     },
-    comentarios: [comentarioSchema],
-    checkList: [checkList],
-    checkListLength: {
+    lengthEstaHecho: {
         type: Number,
         required: false,
-        dafeult: 0
-    }
+        default: 0
+    },
+    prioridad: {
+        type: String,
+        enum: ['Urgente', 'Alta', 'Normal', 'Baja', 'Ninguna'],
+        default: 'Normal'
+    },
+    comentarios: [comentarioSchema],
+    checkList: [checkList],
+
 
 });
 

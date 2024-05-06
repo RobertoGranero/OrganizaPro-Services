@@ -12,7 +12,7 @@ let Usuario = require(__dirname + '/../models/usuario.js');
 let router = express.Router();
 let storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, 'uploads/avataresUsuarios')
+      cb(null, 'uploads/avatarUsuarios')
     },
     filename: function (req, file, cb) {
       cb(null, Date.now() + "_" + file.originalname)
@@ -28,8 +28,14 @@ router.post('/login', (req, res) => {
         if(!usuario || !usuario.password){
             res.status(401).send({ error: "Login incorrecto" });
         }
+        const usuarioInfo = {
+            _id: usuario._id,
+            nombre: usuario.nombre,
+            apellidos: usuario.apellidos,
+            biografia: usuario.biografia
+        }
         const checkPassword = await handleBcrypt.compare(password, usuario.password)
-        const token = auth.generarToken(usuario);
+        const token = auth.generarToken(usuarioInfo);
 
         if(checkPassword){
             res.status(200).send({ accessToken: token });
@@ -38,7 +44,7 @@ router.post('/login', (req, res) => {
     });
 });
 
-router.post('/register', upload.single('avatar'), async (req, res) => {
+router.post('/register', async (req, res) => {
     const passwordHash = await handleBcrypt.encrypt(req.body.password)
 
     let nuevoUsuario = new Usuario({
@@ -64,7 +70,6 @@ router.get('/me', (req, res) => {
     if (token && token.startsWith("Bearer "))
         token = token.slice(7);
     const contenidoToken = auth.validarToken(token);
-
     if (contenidoToken) {
         res.status(200).send(contenidoToken.usuario);
     } else {
@@ -130,17 +135,17 @@ router.post('/google', async (req, res) => {
 
 router.get('/usuarios', (req, res) => {
     Usuario.find().then(resultado => {
-
         res.status(200)
             .send(resultado);
     }).catch(error => {
         res.status(500)
-            .send({ error: "No hay tableros registrados" });
+            .send({ error: "No hay usuarios registrados" });
     });
 });
 
 router.get('/:id', (req, res) => {
     Usuario.findById({_id: req.params.id}).then(resultado => {
+
         res.status(200)
             .send(resultado);
     }).catch(error => {
@@ -164,12 +169,12 @@ router.put('/profile/:id', (req, res) => {
         }
         else {
             res.status(400)
-                .send({ error: "Error actualizando los datos del tablero" });
+                .send({ error: "Error actualizando los datos del usuario" });
         }
 
     }).catch(error => {
         res.status(400)
-            .send({ error: "Error actualizando los datos del tablero" });
+            .send({ error: "Error actualizando los datos del usuario" });
     });
 });
 
@@ -187,13 +192,34 @@ router.put('/password/:id', async (req, res) => {
         }
         else {
             res.status(400)
-                .send({ error: "Error actualizando los datos del tablero" });
+                .send({ error: "Error actualizando los datos del usuario" });
         }
 
     }).catch(error => {
         res.status(400)
-            .send({ error: "Error actualizando los datos del tablero" });
+            .send({ error: "Error actualizando los datos del usuario" });
     });
 });
+
+
+router.post('/avatar/:id', (req, res) => {
+
+    Usuario.findById(req.params.id).then((resultado) => {
+
+        if(req.body.avatar) resultado.avatar = req.body.avatar;
+
+        resultado.save().then((result) => {
+            res.status(200).send(result);
+
+        }).catch((err) => {
+            res.status(400).send(err);
+        });
+
+    }).catch((error) => {
+        res.status(400).send(err);
+    })
+});
+
+
 
 module.exports = router;

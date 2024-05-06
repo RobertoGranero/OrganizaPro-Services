@@ -24,6 +24,36 @@ router.post('/:id/tarjetas', (req, res) => {
     })
 });
 
+router.delete('/:id/tarjeta/:idTarjeta/deleteTarjeta', (req, res) => {
+
+    Lista.findById(req.params.id).then((resultado) => {
+        const indexTarjeta = resultado.tarjetas.findIndex((resp) => resp._id == req.params.idTarjeta);
+        resultado.tarjetas.splice(indexTarjeta, 1)
+        resultado.save().then(() => {
+            res.status(200).send({resp: indexTarjeta});
+
+        }).catch((err) => {
+            res.status(400).send(err);
+        });
+
+    }).catch((error) => {
+        res.status(400).send(error);
+    })
+});
+
+// GET checkLists
+router.get('/checkList/:idUsuario', (req, res) => {
+    Lista.find().then((resultado) => {
+        resultado.forEach((lista) => {
+            lista.tarjetas.forEach((tarjeta) => {
+                res.status(200).send(tarjeta.checkList.filter((resp) => resp.usuario == req.params.idUsuario))
+            })
+        });
+
+    }).catch((error) => {
+        res.status(400).send(error);
+    })
+});
 
 
 // Cambiar tarjeta de lista
@@ -47,7 +77,6 @@ router.delete('/:id/tarjetaDelete/:indice', (req, res) => {
     Lista.findById(req.params.id).then(resultado => {
             resultado.tarjetas.splice(req.params.indice, 1);
             resultado.save().then((result) => {
-                console.log(result.tarjetas)
                 res.status(200).send(result.tarjetas);
 
             }).catch((err) => {
@@ -63,10 +92,10 @@ router.delete('/:id/tarjetaDelete/:indice', (req, res) => {
 router.post('/:idLista/checkList/:idTarjeta', (req, res) => {
     Lista.findById(req.params.idLista).then((resultado) => {
 
-        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id = req.params.idTarjeta).checkList.push(req.body);
+        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).checkList.push(req.body);
 
         resultado.save().then((result) => {
-            res.status(200).send({ resultado: result });
+            res.status(200).send(result.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta));
 
         }).catch((error) => {
             res.status(400).send({error: error});
@@ -77,10 +106,53 @@ router.post('/:idLista/checkList/:idTarjeta', (req, res) => {
     })
 });
 
-router.put('/:idLista/descripcion/:idTarjeta', (req, res) => {
+
+router.post('/:idLista/check/:idTarjeta/:idCheck/addCheck', (req, res) => {
+    Lista.findById(req.params.idLista).then((resultado) => {
+
+        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).checkList.find((check) => check._id == req.params.idCheck).estaHecho = req.body.check;
+        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).lengthEstaHecho++;
+
+        console.log(resultado)
+        resultado.save().then((result) => {
+
+            res.status(200).send(result.tarjetas);
+
+        }).catch((error) => {
+            res.status(400).send({error: error});
+        });
+
+    }).catch((error) => {
+        res.status(400).send({error: error});
+    })
+});
+
+router.delete('/:idLista/check/:idTarjeta/:idCheck/deleteCheck', (req, res) => {
+    Lista.findById(req.params.idLista).then((resultado) => {
+
+        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).checkList.find((check) => check._id == req.params.idCheck).estaHecho = false;
+        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).lengthEstaHecho--;
+
+        console.log(resultado)
+        resultado.save().then((result) => {
+            res.status(200).send(result.tarjetas);
+
+        }).catch((error) => {
+            res.status(400).send({error: error});
+        });
+
+    }).catch((error) => {
+        res.status(400).send({error: error});
+    })
+});
+
+
+router.put('/:idLista/edit/:idTarjeta', (req, res) => {
     Lista.findById(req.params.idLista).then((resultado) => {
         console.log(req.body)
         resultado.tarjetas.find(tarjeta => tarjeta._id == req.params.idTarjeta).descripcion = req.body.descripcion;
+        resultado.tarjetas.find(tarjeta => tarjeta._id == req.params.idTarjeta).titulo = req.body.titulo;
+        resultado.tarjetas.find(tarjeta => tarjeta._id == req.params.idTarjeta).prioridad = req.body.prioridad;
 
         resultado.save().then(resultado => {
                 res.status(200).send(resultado.tarjetas.find(tarjeta => tarjeta._id == req.params.idTarjeta));
@@ -94,13 +166,24 @@ router.put('/:idLista/descripcion/:idTarjeta', (req, res) => {
     });
 });
 
-/* router.post('/:idLista/checkList/:idTarjeta/estaHecho/:idCheckList', (req, res) => {
-    Lista.findById(req.params.idLista).then((resultado) => {
-        console.log(req.body.check)
-        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id = req.params.idTarjeta).checkList.find((check) => check._id = req.params.idCheckList).estaHecho = req.body.check;
+// Comentarios
 
-        resultado.save().then((resultado) => {
-            res.status(200).send(resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id = req.params.idTarjeta).checkList.find((check) => check._id = req.params.idCheckList).estaHecho);
+ router.get('/:idLista/getComentarios/:idTarjeta', (req, res) => {
+    Lista.findById(req.params.idLista).then(async (resultado) => {
+
+        res.status(200).send(resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id ==req.params.idTarjeta).comentarios);
+    }).catch((error) => {
+        res.status(400).send({error: error});
+    })
+});
+
+router.post('/:idLista/comentarios/:idTarjeta', (req, res) => {
+    Lista.findById(req.params.idLista).then((resultado) => {
+
+        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).comentarios.push(req.body);
+
+        resultado.save().then((result) => {
+            res.status(200).send({resultado: result});
 
         }).catch((error) => {
             res.status(400).send({error: error});
@@ -109,6 +192,6 @@ router.put('/:idLista/descripcion/:idTarjeta', (req, res) => {
     }).catch((error) => {
         res.status(400).send({error: error});
     })
-}); */
+});
 
 module.exports = router;

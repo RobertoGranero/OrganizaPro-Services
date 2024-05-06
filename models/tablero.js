@@ -17,6 +17,11 @@ let tableroSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'espaciodetrabajo',
     },
+    fecha: {
+        type: Date,
+        required: false,
+        default: Date.now()
+    },
     colorTablero: {
         type: String,
         required: false
