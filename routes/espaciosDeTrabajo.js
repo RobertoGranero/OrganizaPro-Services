@@ -1,5 +1,5 @@
 const express = require('express');
-//const auth = require(__dirname + '/../auth/auth');
+const auth = require(__dirname + '/../auth/auth');
 
 let EspacioDeTrabajo = require(__dirname + '/../models/espacioDeTrabajo.js');
 let Tablero = require(__dirname + '/../models/tablero.js');
@@ -114,10 +114,10 @@ router.post('/miembros/:id',  (req, res) => {
 
 // Actualizar los datos de un tablero
 router.put('/:id', (req, res) => {
+    console.log(req.body)
     EspacioDeTrabajo.findByIdAndUpdate(req.params.id, {
         $set: {
             titulo: req.body.titulo,
-            descripcion: req.body.descripcion,
         }
     }, { new: true }).then(resultado => {
         if (resultado) {
@@ -126,17 +126,17 @@ router.put('/:id', (req, res) => {
         }
         else {
             res.status(400)
-                .send({ error: "Error actualizando los datos del tablero" });
+                .send({ error: "Error actualizando los datos del espacio de trabajo" });
         }
 
     }).catch(error => {
         res.status(400)
-            .send({ error: "Error actualizando los datos del tablero" });
+            .send({ error: "Error actualizando los datos del espacio de trabajo" });
     });
 });
 
 // Eliminar un EspacioDeTrabajo
-router.delete('/:id', (req, res) => {
+router.delete('/:id', auth.protegerRuta, (req, res) => {
     Tablero.deleteMany({espacioTrabajo: req.params.id}).then(() => {
         EspacioDeTrabajo.findByIdAndDelete(req.params.id)
         .then(resultado => {

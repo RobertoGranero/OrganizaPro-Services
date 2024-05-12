@@ -28,9 +28,10 @@ router.delete('/:id/tarjeta/:idTarjeta/deleteTarjeta', (req, res) => {
 
     Lista.findById(req.params.id).then((resultado) => {
         const indexTarjeta = resultado.tarjetas.findIndex((resp) => resp._id == req.params.idTarjeta);
-        resultado.tarjetas.splice(indexTarjeta, 1)
+        resultado.tarjetas.splice(indexTarjeta,1)
+        console.log(resultado.tarjetas)
         resultado.save().then(() => {
-            res.status(200).send({resp: indexTarjeta});
+            res.status(200).send(String(indexTarjeta));
 
         }).catch((err) => {
             res.status(400).send(err);

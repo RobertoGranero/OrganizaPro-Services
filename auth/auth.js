@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 // Podríamos cargarlo de un fichero aparte
 
-let generarToken = (usuario) => jwt.sign({usuario: usuario}, 'secretoNode', {expiresIn: "4 hours"});
+let generarToken = (usuario) => jwt.sign({usuario: usuario}, 'secretoNode');
 
 let validarToken = token => {
     try {

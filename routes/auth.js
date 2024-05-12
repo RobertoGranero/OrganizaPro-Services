@@ -1,6 +1,5 @@
 const express = require('express');
 const multer = require('multer');
-const { verificarToken } = require('../auth/auth');
 const auth = require(__dirname + '/../auth/auth.js');
 const handleBcrypt = require(__dirname + '/../auth/handleBcrypt.js');
 const {OAuth2Client} = require('google-auth-library');
@@ -25,7 +24,7 @@ router.post('/login', (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
     Usuario.findOne({email: email}).then(async (usuario) => {
-        if(!usuario || !usuario.password){
+        if(!usuario || !usuario.password || !usuario._id){
             res.status(401).send({ error: "Login incorrecto" });
         }
         const usuarioInfo = {
@@ -133,7 +132,7 @@ router.post('/google', async (req, res) => {
     }
 });
 
-router.get('/usuarios', (req, res) => {
+router.get('/usuarios', auth.protegerRuta, (req, res) => {
     Usuario.find().then(resultado => {
         res.status(200)
             .send(resultado);
@@ -154,7 +153,7 @@ router.get('/:id', (req, res) => {
     });
 });
 
-router.put('/profile/:id', (req, res) => {
+router.put('/profile/:id', auth.protegerRuta, (req, res) => {
     Usuario.findByIdAndUpdate(req.params.id, {
         $set: {
             nombre: req.body.nombre,
@@ -178,7 +177,7 @@ router.put('/profile/:id', (req, res) => {
     });
 });
 
-router.put('/password/:id', async (req, res) => {
+router.put('/password/:id', auth.protegerRuta, async (req, res) => {
     const passwordHash = await handleBcrypt.encrypt(req.body.password)
 
     Usuario.findByIdAndUpdate(req.params.id, {
@@ -202,7 +201,7 @@ router.put('/password/:id', async (req, res) => {
 });
 
 
-router.post('/avatar/:id', (req, res) => {
+router.post('/avatar/:id', auth.protegerRuta, (req, res) => {
 
     Usuario.findById(req.params.id).then((resultado) => {
 
@@ -220,6 +219,17 @@ router.post('/avatar/:id', (req, res) => {
     })
 });
 
+router.delete('/:id', auth.protegerRuta, (req, res) => {
+    Usuario.findByIdAndDelete(req.params.id)
+    .then(resultado => {
+        res.status(200)
+            .send({ resultado: resultado });
+        
+    }).catch(error => {
+        res.status(400)
+            .send({ error: error });
+    });
 
+});
 
 module.exports = router;

@@ -138,7 +138,7 @@ router.delete('/:id', (req, res) => {
         .then(resultado => {
             if (resultado) {
                 res.status(200)
-                    .send({ resultado: resultado });
+                    .send(resultado);
             }
             else {
                 res.status(400)
