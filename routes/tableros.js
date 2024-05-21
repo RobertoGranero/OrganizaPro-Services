@@ -1,7 +1,8 @@
 const express = require('express');
-//const auth = require(__dirname + '/../auth/auth');
+const auth = require(__dirname + '/../auth/auth');
 
 let Tablero = require(__dirname + '/../models/tablero.js');
+let Lista = require(__dirname + '/../models/lista.js');
 let Usuario = require(__dirname + '/../models/usuario.js');
 
 let router = express.Router();
@@ -9,7 +10,7 @@ let router = express.Router();
 
 
 // Obtener todos los tablero
-router.get('/', (req, res) => {
+router.get('/', auth.protegerRuta, (req, res) => {
     Tablero.find().then(resultado => {
         res.status(200)
             .send({ resultado: resultado });
@@ -21,7 +22,7 @@ router.get('/', (req, res) => {
 
 
 
-router.get('/tablerosEspacioTrabajo/:idEspacioTrabajo', (req, res) => {
+router.get('/tablerosEspacioTrabajo/:idEspacioTrabajo', auth.protegerRuta, (req, res) => {
     Tablero.find({espacioTrabajo: req.params.idEspacioTrabajo}).then(resultado => {
         res.status(200)
             .send(resultado);
@@ -32,7 +33,7 @@ router.get('/tablerosEspacioTrabajo/:idEspacioTrabajo', (req, res) => {
     });
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', auth.protegerRuta, (req, res) => {
     Tablero.findById(req.params.id).then(resultado => {
         res.status(200)
             .send(resultado);
@@ -43,7 +44,7 @@ router.get('/:id', (req, res) => {
 });
 
 // Añadir un tablero
-router.post('/',  (req, res) => {
+router.post('/', auth.protegerRuta,  (req, res) => {
     let nuevoTablero = new Tablero({
         titulo: req.body.titulo,
         usuario: req.body.usuario,
@@ -61,7 +62,7 @@ router.post('/',  (req, res) => {
 });
 
 // Actualizar los datos de un tablero
-router.post('/insertarUsuario/:id', (req, res) => {
+router.post('/insertarUsuario/:id', auth.protegerRuta, (req, res) => {
     let insertarUsuarioEnTablero = {
         "usuario": req.body.id,
         "estado": req.body.estado,
@@ -87,7 +88,7 @@ router.post('/insertarUsuario/:id', (req, res) => {
 });
 
 // Actualizar los datos de un tablero
-router.put('/:id', (req, res) => {
+router.put('/:id', auth.protegerRuta, (req, res) => {
     Tablero.findByIdAndUpdate(req.params.id, {
         $set: {
             titulo: req.body.titulo,
@@ -110,9 +111,11 @@ router.put('/:id', (req, res) => {
 });
 
 // Eliminar un tablero
-router.delete('/:id', (req, res) => {
+router.delete('/:id', auth.protegerRuta, (req, res) => {
     Tablero.findByIdAndDelete(req.params.id)
-        .then(resultado => {
+        .then(async resultado => {
+            await Lista.deleteMany({ tablero: { $in: req.params.id } });
+
             if (resultado) {
                 res.status(200)
                     .send(resultado);

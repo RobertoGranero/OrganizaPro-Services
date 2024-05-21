@@ -1,12 +1,12 @@
 const express = require('express');
-//const auth = require(__dirname + '/../auth/auth');
+const auth = require(__dirname + '/../auth/auth');
 
 let Lista = require(__dirname + '/../models/lista.js');
 
 let router = express.Router();
 
 // Añadir una tarjeta a una lista
-router.post('/:id/tarjetas', (req, res) => {
+router.post('/:id/tarjetas', auth.protegerRuta, (req, res) => {
     let tarjetaNueva = {
         "titulo": req.body.titulo,
     }
@@ -24,12 +24,11 @@ router.post('/:id/tarjetas', (req, res) => {
     })
 });
 
-router.delete('/:id/tarjeta/:idTarjeta/deleteTarjeta', (req, res) => {
+router.delete('/:id/tarjeta/:idTarjeta/deleteTarjeta', auth.protegerRuta, (req, res) => {
 
     Lista.findById(req.params.id).then((resultado) => {
         const indexTarjeta = resultado.tarjetas.findIndex((resp) => resp._id == req.params.idTarjeta);
         resultado.tarjetas.splice(indexTarjeta,1)
-        console.log(resultado.tarjetas)
         resultado.save().then(() => {
             res.status(200).send(String(indexTarjeta));
 
@@ -45,20 +44,24 @@ router.delete('/:id/tarjeta/:idTarjeta/deleteTarjeta', (req, res) => {
 // GET checkLists
 router.get('/checkList/:idUsuario', (req, res) => {
     Lista.find().then((resultado) => {
-        resultado.forEach((lista) => {
-            lista.tarjetas.forEach((tarjeta) => {
-                res.status(200).send(tarjeta.checkList.filter((resp) => resp.usuario == req.params.idUsuario))
-            })
-        });
+        if(resultado){
+            resultado.forEach((lista) => {
+                lista.tarjetas.forEach((tarjeta) => {
+                    res.status(200).send(tarjeta.checkList.filter((resp) => resp.usuario == req.params.idUsuario))
+                })
+            });
+    
+        }
 
     }).catch((error) => {
+        console.log("error")
         res.status(400).send(error);
     })
 });
 
 
 // Cambiar tarjeta de lista
-router.post('/:id/nuevaTarjetaLista', (req, res) => {
+router.post('/:id/nuevaTarjetaLista', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.id).then((resultado) => {
         resultado.tarjetas.push(req.body);
         resultado.save().then((result) => {
@@ -74,7 +77,7 @@ router.post('/:id/nuevaTarjetaLista', (req, res) => {
 });
 
 // Eliminar una tarjeta de la lista
-router.delete('/:id/tarjetaDelete/:indice', (req, res) => {
+router.delete('/:id/tarjetaDelete/:indice', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.id).then(resultado => {
             resultado.tarjetas.splice(req.params.indice, 1);
             resultado.save().then((result) => {
@@ -90,7 +93,8 @@ router.delete('/:id/tarjetaDelete/:indice', (req, res) => {
         });
 });
 
-router.post('/:idLista/checkList/:idTarjeta', (req, res) => {
+// Crear tarea
+router.post('/:idLista/checkList/:idTarjeta', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.idLista).then((resultado) => {
 
         resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).checkList.push(req.body);
@@ -107,14 +111,31 @@ router.post('/:idLista/checkList/:idTarjeta', (req, res) => {
     })
 });
 
+// Borrar tarea
+router.delete('/:idLista/checkList/:idTarjeta/:idCheck', auth.protegerRuta, (req, res) => {
+    Lista.findById(req.params.idLista).then((resultado) => {
 
-router.post('/:idLista/check/:idTarjeta/:idCheck/addCheck', (req, res) => {
+        const indexCheckList = resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).checkList.findIndex((result) => result._id == req.params.idCheck);
+        resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).checkList.splice(indexCheckList, 1)
+        resultado.save().then((result) => {
+            res.status(200).send(String(indexCheckList));
+
+        }).catch((error) => {
+            res.status(400).send({error: error});
+        });
+
+    }).catch((error) => {
+        res.status(400).send({error: error});
+    })
+});
+
+
+router.post('/:idLista/check/:idTarjeta/:idCheck/addCheck', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.idLista).then((resultado) => {
 
         resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).checkList.find((check) => check._id == req.params.idCheck).estaHecho = req.body.check;
         resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).lengthEstaHecho++;
 
-        console.log(resultado)
         resultado.save().then((result) => {
 
             res.status(200).send(result.tarjetas);
@@ -128,13 +149,12 @@ router.post('/:idLista/check/:idTarjeta/:idCheck/addCheck', (req, res) => {
     })
 });
 
-router.delete('/:idLista/check/:idTarjeta/:idCheck/deleteCheck', (req, res) => {
+router.delete('/:idLista/check/:idTarjeta/:idCheck/deleteCheck', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.idLista).then((resultado) => {
 
         resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).checkList.find((check) => check._id == req.params.idCheck).estaHecho = false;
         resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).lengthEstaHecho--;
 
-        console.log(resultado)
         resultado.save().then((result) => {
             res.status(200).send(result.tarjetas);
 
@@ -148,9 +168,8 @@ router.delete('/:idLista/check/:idTarjeta/:idCheck/deleteCheck', (req, res) => {
 });
 
 
-router.put('/:idLista/edit/:idTarjeta', (req, res) => {
+router.put('/:idLista/edit/:idTarjeta' , auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.idLista).then((resultado) => {
-        console.log(req.body)
         resultado.tarjetas.find(tarjeta => tarjeta._id == req.params.idTarjeta).descripcion = req.body.descripcion;
         resultado.tarjetas.find(tarjeta => tarjeta._id == req.params.idTarjeta).titulo = req.body.titulo;
         resultado.tarjetas.find(tarjeta => tarjeta._id == req.params.idTarjeta).prioridad = req.body.prioridad;
@@ -169,7 +188,7 @@ router.put('/:idLista/edit/:idTarjeta', (req, res) => {
 
 // Comentarios
 
- router.get('/:idLista/getComentarios/:idTarjeta', (req, res) => {
+ router.get('/:idLista/getComentarios/:idTarjeta', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.idLista).then(async (resultado) => {
 
         res.status(200).send(resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id ==req.params.idTarjeta).comentarios);
@@ -178,7 +197,7 @@ router.put('/:idLista/edit/:idTarjeta', (req, res) => {
     })
 });
 
-router.post('/:idLista/comentarios/:idTarjeta', (req, res) => {
+router.post('/:idLista/comentarios/:idTarjeta', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.idLista).then((resultado) => {
 
         resultado.tarjetas.find((tarjetaResp) => tarjetaResp._id == req.params.idTarjeta).comentarios.push(req.body);

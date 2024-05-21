@@ -2,6 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 // Enrutadores
 //const EspacioDeTrabajo = require(__dirname + "/models/espacioDeTrabajo");
@@ -21,6 +22,8 @@ let app = express();
 // A cada enrutador se le indica una ruta base
 app.use(cors());
 app.use(express.json());
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/espacioDeTrabajo', EspacioDeTrabajo);
 app.use('/listas', Lista);
 app.use('/tarjetas', Tarjeta);

@@ -27,18 +27,25 @@ router.post('/login', (req, res) => {
         if(!usuario || !usuario.password || !usuario._id){
             res.status(401).send({ error: "Login incorrecto" });
         }
-        const usuarioInfo = {
-            _id: usuario._id,
-            nombre: usuario.nombre,
-            apellidos: usuario.apellidos,
-            biografia: usuario.biografia
-        }
-        const checkPassword = await handleBcrypt.compare(password, usuario.password)
-        const token = auth.generarToken(usuarioInfo);
+        if(usuario){
+            const usuarioInfo = {
+                _id: usuario._id,
+                nombre: usuario.nombre,
+                apellidos: usuario.apellidos,
+                biografia: usuario.biografia
+                
+            }
+            const checkPassword = await handleBcrypt.compare(password, usuario.password)
+            const token = auth.generarToken(usuarioInfo);
 
-        if(checkPassword){
-            res.status(200).send({ accessToken: token });
+            if(checkPassword){
+                res.status(200).send({ accessToken: token });
+            }
+    
         }
+
+
+
 
     });
 });

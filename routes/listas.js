@@ -1,12 +1,12 @@
 const express = require('express');
-//const auth = require(__dirname + '/../auth/auth');
+const auth = require(__dirname + '/../auth/auth');
 
 let Lista = require(__dirname + '/../models/lista.js');
 
 let router = express.Router();
 
 // Obtener todas las listas
-router.get('/', (req, res) => {
+router.get('/', auth.protegerRuta, (req, res) => {
     Lista.find().then(resultado => {
         res.status(200)
             .send({ resultado: resultado });
@@ -16,18 +16,9 @@ router.get('/', (req, res) => {
     });
 });
 
-/* router.get('/:id', (req, res) => {
-    Lista.findById(req.params.id).then(resultado => {
-        res.status(200)
-            .send({ resultado: resultado });
-    }).catch(error => {
-        res.status(400)
-            .send({ error: "No existe la lista" });
-    });
-}); */
 
 //Obtener listas del tablero
-router.get('/:idTablero', (req, res) => {
+router.get('/:idTablero', auth.protegerRuta, (req, res) => {
     Lista.find({tablero: req.params.idTablero}).then(resultado => {
         res.status(200)
             .send(resultado);
@@ -38,7 +29,7 @@ router.get('/:idTablero', (req, res) => {
 });
 
 // Añadir una lista
-router.post('/', (req, res) => {
+router.post('/', auth.protegerRuta, (req, res) => {
     let nuevaLista = new Lista({
         titulo: req.body.titulo,
         tablero: req.body.tablero,
@@ -56,7 +47,7 @@ router.post('/', (req, res) => {
 });
 
 // Añadir una tarjeta a una lista
-router.post('/:id/tarjetas', (req, res) => {
+router.post('/:id/tarjetas', auth.protegerRuta, (req, res) => {
     let tarjetaNueva = {
         "titulo": req.body.titulo,
     }
@@ -77,7 +68,7 @@ router.post('/:id/tarjetas', (req, res) => {
 
 
 // Cambiar tarjeta de lista
-router.post('/:id/nuevaTarjetaLista', (req, res) => {
+router.post('/:id/nuevaTarjetaLista', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.id).then((resultado) => {
         resultado.tarjetas.push(req.body);
         resultado.save().then((result) => {
@@ -93,11 +84,10 @@ router.post('/:id/nuevaTarjetaLista', (req, res) => {
 });
 
 // Eliminar una tarjeta de la lista
-router.delete('/:id/tarjetaDelete/:indice', (req, res) => {
+router.delete('/:id/tarjetaDelete/:indice', auth.protegerRuta, (req, res) => {
     Lista.findById(req.params.id).then(resultado => {
             resultado.tarjetas.splice(req.params.indice, 1);
             resultado.save().then((result) => {
-                console.log(result.tarjetas)
                 res.status(200).send(result.tarjetas);
 
             }).catch((err) => {
@@ -111,7 +101,7 @@ router.delete('/:id/tarjetaDelete/:indice', (req, res) => {
 });
 
 // Editar titulo lista
-router.put('/:id/tituloLista', (req, res) => {
+router.put('/:id/tituloLista', auth.protegerRuta, (req, res) => {
     Lista.findByIdAndUpdate(req.params.id, {
         $set: {
             titulo: req.body.titulo,
@@ -133,7 +123,7 @@ router.put('/:id/tituloLista', (req, res) => {
 });
 
 // Eliminar una lista
-router.delete('/:id', (req, res) => {
+router.delete('/:id', auth.protegerRuta, (req, res) => {
     Lista.findByIdAndDelete(req.params.id)
         .then(resultado => {
             if (resultado) {
