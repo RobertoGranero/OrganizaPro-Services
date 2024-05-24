@@ -7,6 +7,9 @@ const CLIENT_ID = '918915279081-4vdi1aklj6567m4qjt1is4c6opfjchm3.apps.googleuser
 const client = new OAuth2Client(CLIENT_ID);
 
 let Usuario = require(__dirname + '/../models/usuario.js');
+let Tablero = require(__dirname + '/../models/tablero.js');
+let EspacioDeTrabajo = require(__dirname + '/../models/espacioDeTrabajo.js');
+let Lista = require(__dirname + '/../models/lista.js');
 
 let router = express.Router();
 let storage = multer.diskStorage({
@@ -226,9 +229,21 @@ router.post('/avatar/:id', auth.protegerRuta, (req, res) => {
     })
 });
 
-router.delete('/:id', auth.protegerRuta, (req, res) => {
+router.delete('/:id', auth.protegerRuta, async (req, res) => {
+
+    const espaciosTrabajo = await EspacioDeTrabajo.find({creadoPor: req.params.id});
+    await EspacioDeTrabajo.findOneAndDelete({creadoPor: req.params.id});
+    const espaciosTrabajoIds = espaciosTrabajo.map(espacioTrabajo => espacioTrabajo._id);
+
+    const tableros = await Tablero.find({ espacioTrabajo: espaciosTrabajoIds });
+    const tableroIds = tableros.map(tablero => tablero._id);
+
+    await Tablero.deleteMany({ espacioTrabajo: espaciosTrabajoIds });
+    await Lista.deleteMany({ tablero: { $in: tableroIds } });
+
     Usuario.findByIdAndDelete(req.params.id)
     .then(resultado => {
+
         res.status(200)
             .send({ resultado: resultado });
         
