@@ -54,7 +54,6 @@ router.get('/checkList/:idUsuario', (req, res) => {
         }
 
     }).catch((error) => {
-        console.log("error")
         res.status(400).send(error);
     })
 });
