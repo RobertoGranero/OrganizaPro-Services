@@ -112,7 +112,7 @@ router.post('/google', async (req, res) => {
         const userEmail = payload.email;
 
         let usuarioGoogleLogin = await Usuario.findOne({ email: userEmail });
-
+        
         if (!usuarioGoogleLogin) {
             const passwordHash = await handleBcrypt.encrypt(payload.email)
 
@@ -121,6 +121,7 @@ router.post('/google', async (req, res) => {
                 apellidos: payload.family_name,
                 email: payload.email,
                 password: passwordHash,
+                avatar: payload.picture
             });
 
             usuarioGoogle.save().then(() => {
