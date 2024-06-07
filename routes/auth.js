@@ -1,5 +1,4 @@
 const express = require('express');
-const multer = require('multer');
 const auth = require(__dirname + '/../auth/auth.js');
 const handleBcrypt = require(__dirname + '/../auth/handleBcrypt.js');
 const {OAuth2Client} = require('google-auth-library');
@@ -12,16 +11,6 @@ let EspacioDeTrabajo = require(__dirname + '/../models/espacioDeTrabajo.js');
 let Lista = require(__dirname + '/../models/lista.js');
 
 let router = express.Router();
-let storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'uploads/avatarUsuarios')
-    },
-    filename: function (req, file, cb) {
-      cb(null, Date.now() + "_" + file.originalname)
-    }
-  })
-
-let upload = multer({storage: storage});
 
 router.post('/login', (req, res) => {
     let email = req.body.email;
@@ -46,10 +35,6 @@ router.post('/login', (req, res) => {
             }
     
         }
-
-
-
-
     });
 });
 
@@ -62,7 +47,6 @@ router.post('/register', async (req, res) => {
         email: req.body.email,
         password: passwordHash,
     });
-    if(req.file) nuevoUsuario.avatar = req.file.filename;
     
     nuevoUsuario.save().then(resultado => {
         res.status(200)
@@ -215,8 +199,7 @@ router.put('/password/:id', auth.protegerRuta, async (req, res) => {
 router.post('/avatar/:id', auth.protegerRuta, (req, res) => {
 
     Usuario.findById(req.params.id).then((resultado) => {
-
-        if(req.body.avatar) resultado.avatar = req.body.avatar;
+        if(req.body.avatar) resultado.avatar = req.body.avatar
 
         resultado.save().then((result) => {
             res.status(200).send(result);
